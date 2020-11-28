@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "../lmic.h"
+#include "LowPower.h"
 #include "hal.h"
 #define _GNU_SOURCE 1 // For fopencookie
 #include <stdio.h>
@@ -107,6 +108,9 @@ u1_t hal_spi (u1_t out) {
 // -----------------------------------------------------------------------------
 // TIME
 
+// Accumulates the number of seconds the cpu is in power down mode.
+static uint32_t secondSleep = 0;
+
 static void hal_time_init () {
     // Nothing to do
 }
@@ -135,7 +139,9 @@ u4_t hal_ticks () {
 
     // Scaled down timestamp. The top US_PER_OSTICK_EXPONENT bits are 0,
     // the others will be the lower bits of our return value.
-    uint32_t scaled = micros() >> US_PER_OSTICK_EXPONENT;
+    // secondsSleep Allows to keep the time updated since the micros() function 
+    // will not be updated while the cpu is power down mode.
+    uint32_t scaled = (micros() + secondSleep*1000000) >> US_PER_OSTICK_EXPONENT;
     // Most significant byte of scaled
     uint8_t msb = scaled >> 24;
     // Mask pointing to the overlapping bit in msb and overflow.
@@ -160,6 +166,10 @@ u4_t hal_ticks () {
 // time has already passed.
 static s4_t delta_time(u4_t time) {
     return (s4_t)(time - hal_ticks());
+}
+
+s4_t hal_getDeltaTime( u4_t time ) {
+    return delta_time(time);
 }
 
 void hal_waitUntil (u4_t time) {
@@ -203,8 +213,32 @@ void hal_enableIRQs () {
     }
 }
 
+void hal_sleepForPeriod ( s4_t period) {
+    
+    if( period <= 1)
+        return;
+    
+    if( period > 8 ){
+        LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+        secondSleep += 8;
+    }
+    else if( period > 4 ){
+        LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF);
+        secondSleep += 4;
+    }
+    else if( period > 2 ){
+        LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF);
+        secondSleep += 2;
+    }
+    else {
+        LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF);
+        secondSleep += 1;
+    }
+}
+
 void hal_sleep () {
-    // Not implemented
+        LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+        secondSleep += 8;
 }
 
 // -----------------------------------------------------------------------------

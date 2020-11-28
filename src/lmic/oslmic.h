@@ -109,6 +109,7 @@ typedef s4_t  ostime_t;
 #define us2osticks(us)   ((ostime_t)( ((int64_t)(us) * OSTICKS_PER_SEC) / 1000000))
 #define ms2osticks(ms)   ((ostime_t)( ((int64_t)(ms) * OSTICKS_PER_SEC)    / 1000))
 #define sec2osticks(sec) ((ostime_t)( (int64_t)(sec) * OSTICKS_PER_SEC))
+#define osticks2sec(os)   ((s4_t)(((os)    ) / OSTICKS_PER_SEC))
 #define osticks2ms(os)   ((s4_t)(((os)*(int64_t)1000    ) / OSTICKS_PER_SEC))
 #define osticks2us(os)   ((s4_t)(((os)*(int64_t)1000000 ) / OSTICKS_PER_SEC))
 // Special versions
@@ -160,6 +161,12 @@ void os_radio (u1_t mode);
 #endif
 #ifndef os_getBattLevel
 u1_t os_getBattLevel (void);
+#endif
+#ifndef os_avoidSleep
+void os_avoidSleep();
+#endif
+#ifndef os_acceptSleep
+void os_acceptSleep();
 #endif
 
 #ifndef os_rlsbf4

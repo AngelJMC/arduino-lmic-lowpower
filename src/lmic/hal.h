@@ -77,12 +77,31 @@ void hal_waitUntil (u4_t time);
  */
 u1_t hal_checkTimer (u4_t targettime);
 
+/* 
+ * Returns the number of ticks until time. 
+ *  - Negative values indicate that time has already passed.
+ */
+s4_t hal_getDeltaTime( u4_t time );
+
 /*
  * perform fatal failure action.
  *   - called by assertions
  *   - action could be HALT or reboot
  */
 void hal_failed (const char *file, u2_t line);
+
+/*
+ * put system and CPU in power down mode, wake up through external WDT event.
+ *   - There are four WDT value to sleep the cpu. 
+ *          SLEEP_1S - 1 s sleep
+ *			SLEEP_2S - 2 s sleep
+ *			SLEEP_4S - 4 s sleep
+ *		    SLEEP_8S - 8 s sleep
+ *   - Depending on the period value, the WDT whose value is lower is selected. 
+ *     That is, if a period of 30 seconds passes, the cpu will sleep for 8s. 
+ *     If the period is 3s, the cpu will sleep for 2s	
+ */
+void hal_sleepForPeriod ( s4_t period);
 
 #ifdef __cplusplus
 } // extern "C"

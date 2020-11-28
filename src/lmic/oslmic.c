@@ -109,6 +109,17 @@ void os_runloop () {
     }
 }
 
+static s1_t avoisleep = 0;
+
+void os_avoidSleep() {
+    avoisleep += 1;
+}
+
+void os_acceptSleep() {
+    avoisleep -= 1;
+    ASSERT( avoisleep >= 0);
+}
+
 void os_runloop_once() {
     #if LMIC_DEBUG_LEVEL > 1
         bool has_deadline = false;
@@ -125,7 +136,12 @@ void os_runloop_once() {
         #if LMIC_DEBUG_LEVEL > 1
             has_deadline = true;
         #endif
-    } else { // nothing pending
+    } else if( OS.scheduledjobs && !avoisleep ) {
+        //If there is a planned job, check if it is possible to sleep the cpu until 
+        //the time of execution of the job is reached.
+        hal_sleepForPeriod ( osticks2sec(hal_getDeltaTime(OS.scheduledjobs->deadline)));
+    }
+    else if( !avoisleep ) { // nothing pending
         hal_sleep(); // wake by irq (timer already restarted)
     }
     hal_enableIRQs();
